@@ -2,6 +2,7 @@
 // si el envio de correos falla, el cobro no se puede caer.
 // Por eso avisa publicando un evento, no llamando a nadie.
 import { publicar } from '../nucleo/eventos.js';
+import { enviarCorreo } from '../notificaciones/notificaciones.js';
 
 export function cobrar(reserva) {
   const referencia = 'PG-' + Math.random().toString(36).slice(2, 8).toUpperCase();
