@@ -1,0 +1,26 @@
+{
+  "descripcion": "Reglas de arquitectura de Canchas Bogota. Cada regla nace de un ADR. El pipeline las verifica en cada cambio.",
+  "reglas": [
+    {
+      "id": "R1",
+      "adr": "ADR-001",
+      "modulo": "catalogo",
+      "no_puede_importar": ["reservas", "pagos", "notificaciones"],
+      "porque": "El catalogo es solo lectura y debe poder desplegarse aparte y sobrevivir aunque el resto falle."
+    },
+    {
+      "id": "R2",
+      "adr": "ADR-002",
+      "modulo": "pagos",
+      "no_puede_importar": ["notificaciones", "catalogo"],
+      "porque": "Si el envio de correos falla, el cobro NO se puede caer. Pagos avisa publicando un evento, no llamando."
+    },
+    {
+      "id": "R3",
+      "adr": "ADR-003",
+      "modulo": "nucleo",
+      "no_puede_importar": ["catalogo", "reservas", "pagos", "notificaciones"],
+      "porque": "El nucleo es la base compartida. Si depende de alguien, deja de ser base y se vuelve un nudo."
+    }
+  ]
+}

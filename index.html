@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canchas Bogotá</title>
+<style>
+  :root{--az:#3E74C4;--az2:#1c3d6e;--bg:#f4f6fa;--ok:#2e7d55;--no:#b4453a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#1b2430;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+  header{background:var(--az2);color:#fff;padding:22px 20px}
+  header h1{margin:0;font-size:1.5rem}
+  header p{margin:4px 0 0;opacity:.85;font-size:.92rem}
+  main{max-width:900px;margin:0 auto;padding:22px 18px 60px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .card{background:#fff;border:1px solid #dde3ec;border-radius:10px;padding:14px 16px}
+  .card h3{margin:0 0 2px;font-size:1.05rem;color:var(--az2)}
+  .card .meta{font-size:.85rem;color:#63708a;margin-bottom:10px}
+  .horas{display:flex;flex-wrap:wrap;gap:6px}
+  button.h{border:1px solid #cfd8e6;background:#fff;border-radius:7px;padding:6px 11px;font-size:.9rem;cursor:pointer;font-family:inherit}
+  button.h:hover:not(:disabled){border-color:var(--az);color:var(--az)}
+  button.h:disabled{background:#eef1f6;color:#a4adbd;cursor:not-allowed;text-decoration:line-through}
+  h2{font-size:1.1rem;color:var(--az2);margin:26px 0 10px;border-bottom:2px solid var(--az);padding-bottom:5px}
+  #bandeja li{background:#fff;border:1px solid #dde3ec;border-left:3px solid var(--ok);border-radius:7px;padding:9px 12px;margin-bottom:7px;list-style:none;font-size:.92rem}
+  #bandeja{padding:0;margin:0}
+  .vacio{color:#7c8798;font-size:.9rem}
+  input{padding:8px 11px;border:1px solid #cfd8e6;border-radius:7px;font-family:inherit;font-size:.95rem;width:220px}
+  footer{max-width:900px;margin:0 auto;padding:0 18px 40px;font-size:.82rem;color:#7c8798}
+</style>
+</head>
+<body>
+<header>
+  <h1>Canchas Bogotá</h1>
+  <p>Reserva de canchas sintéticas · proyecto integrador de Arquitectura de Software · UTadeo</p>
+</header>
+<main>
+  <label for="nombre" style="font-size:.9rem;color:#63708a">Su nombre:</label><br>
+  <input id="nombre" placeholder="Escriba su nombre" value="Invitado">
+
+  <h2>Canchas disponibles</h2>
+  <div class="grid" id="canchas"></div>
+
+  <h2>Notificaciones recibidas</h2>
+  <ul id="bandeja"><li class="vacio" style="border-left-color:#cfd8e6">Todavía no hay ninguna. Reserve un horario.</li></ul>
+</main>
+<footer>
+  Cada módulo de este sistema tiene fronteras declaradas en <code>arquitectura/reglas.json</code>
+  y verificadas por el pipeline en cada cambio.
+</footer>
+
+<script type="module">
+  import { listarCanchas, horariosDe } from './src/catalogo/catalogo.js';
+  import { reservar } from './src/reservas/reservas.js';
+  import { cobrar } from './src/pagos/pagos.js';
+  import { iniciar, mensajes } from './src/notificaciones/notificaciones.js';
+
+  iniciar();
+
+  function pintar() {
+    const cont = document.getElementById('canchas');
+    cont.innerHTML = '';
+    listarCanchas().forEach(function (c) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      const precio = c.precioHora.toLocaleString('es-CO');
+      div.innerHTML = '<h3>' + c.nombre + '</h3>' +
+        '<div class="meta">' + c.barrio + ' · ' + c.tipo + ' · $' + precio + '/hora</div>' +
+        '<div class="horas"></div>';
+      const cont2 = div.querySelector('.horas');
+      horariosDe(c.id).forEach(function (h) {
+        const b = document.createElement('button');
+        b.className = 'h';
+        b.textContent = h.hora;
+        b.disabled = !h.disponible;
+        b.onclick = function () { hacerReserva(c.id, h.hora); };
+        cont2.appendChild(b);
+      });
+      cont.appendChild(div);
+    });
+  }
+
+  function pintarBandeja() {
+    const ul = document.getElementById('bandeja');
+    const ms = mensajes();
+    if (ms.length === 0) return;
+    ul.innerHTML = '';
+    ms.forEach(function (m) {
+      const li = document.createElement('li');
+      li.textContent = m;
+      ul.appendChild(li);
+    });
+  }
+
+  function hacerReserva(idCancha, hora) {
+    const nombre = document.getElementById('nombre').value || 'Invitado';
+    const r = reservar(idCancha, hora, nombre);
+    if (!r.ok) { alert(r.motivo); return; }
+    cobrar(r.reserva);
+    pintar();
+    pintarBandeja();
+  }
+
+  pintar();
+</script>
+</body>
+</html>
